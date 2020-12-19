@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Insta Calculator</title>
+    <style>
+      body {
+        text-align: center;
+        max-width: 400px;
+        padding: 0 2em;
+        margin: 0 auto;
+      }
+
+      fieldset {
+        margin: 1em 0;
+      }
+
+      fieldset .items {
+        display: grid;
+        grid-template-columns: 2fr 0.5fr auto;
+        grid-gap: 1em;
+      }
+
+      fieldset legend {
+        font-weight: bold;
+      }
+
+      input {
+        grid-column: 2 / 3;
+      }
+
+      label {
+        grid-column: 1 / 2;
+        text-align: right;
+      }
+
+      input.money:before {
+        display: block;
+        content: "$";
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .money, table .number {
+        text-align: right;
+      }
+
+      .money::before {
+        display: inline;
+        content: "$";
+      }
+
+      .good,
+      .bad {
+        font-weight: bold;
+      }
+
+      .good {
+        color: green;
+      }
+
+      .bad {
+        color: crimson;
+      }
+
+      .loss::before,
+      .loss::after {
+        display: inline;
+      }
+
+      .loss::before {
+        content: "$(-";
+      }
+
+      .loss::after {
+        content: ")";
+      }
+
+      table  tbody {
+        text-align: left;
+      }
+
+      #lineItems {
+        margin: 0 auto;
+      }
+
+      #lineItems thead tr {
+        background-color: rgb(168, 168, 168);
+      }
+
+      #lineItems tbody tr:nth-child(even) {
+        background-color: lightgray
+      }
+
+      #totalNet {
+        margin-left: auto;
+      }
+
+      #totalNet tbody tr {
+        width: 100%;
+      }
+
+      th,
+      td {
+        padding: 0.15em 0.25em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Insta Calculator</h1>
+
+    <form id="inputData">
+      <fieldset>
+        <legend>Job</legend>
+
+        <div class="items">
+          <label for="distanceFromStore"
+            >Distance from Store (<abbr title="Miles">mi</abbr>)</label
+          >
+          <input
+            type="number"
+            id="distanceFromStore"
+            name="distanceFromStore"
+            min="1"
+            max="1000"
+            value="1"
+          />
+
+          <label for="tip">Tip ($)</label>
+          <input
+            type="number"
+            id="tip"
+            name="tip"
+            min="0"
+            max="10000"
+            value=""
+          />
+
+          <label for="numberOfItems">Number of Items</label>
+          <input
+            type="number"
+            id="numberOfItems"
+            name="numberOfItems"
+            min="1"
+            max="1000"
+            value="10"
+          />
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Instacart</legend>
+
+        <div class="items">
+          <label for="instacartMinimum">Base Rate (Minimum)</label>
+          <input
+            type="number"
+            id="instacartMinimum"
+            name="instacartMinimum"
+            class="money"
+            min="0"
+            max="100"
+            value="7"
+          />
+
+          <label for="instacartMaximum">Base Rate (Maximum)</label>
+          <input
+            type="number"
+            id="instacartMaximum"
+            name="instacartMaximum"
+            min="0"
+            max="100"
+            value="10"
+          />
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Car</legend>
+
+        <div class="items">
+          <label for="gasPrice">Gas Price</label>
+          <input
+            type="number"
+            id="gasPrice"
+            name="gasPrice"
+            min="0"
+            max="100"
+            value="2.29"
+          />
+
+          <label for="averageMileage">Average MPG</label>
+          <input
+            type="number"
+            id="averageMileage"
+            name="averageMileage"
+            min="1"
+            max="80"
+            value="29"
+          />
+
+          <!-- <label for="costPerMile">$ per Mile</label>
+          <input type="number" id="costPerMile" name="costPerMile" disabled /> -->
+        </div>
+      </fieldset>
+    </form>
+
+    <section id="results">
+      <h2>Results</h2>
+
+      <table id="lineItems">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Rate</th>
+            <th>Quantity</th>
+            <th>Net</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="result-grossPerItem">
+            <td>$ per item picked</td>
+            <td id="result-grossPerItem-rate" class="money"><!-- rate --></td>
+            <td id="result-grossPerItem-quantity" class="number"><!-- quantity --></td>
+            <td id="result-grossPerItem-net" class="money good">
+              <!-- net -->
+            </td>
+          </tr>
+
+          <tr id="result-costPerMile">
+            <td>$ per mile</td>
+            <td id="result-costPerMile-rate" class="money"><!-- rate --></td>
+            <td id="result-costPerMile-quantity" class="number"><!-- quantity --></td>
+            <td id="result-costPerMile-net" class="money bad loss">
+              <!-- net -->
+            </td>
+          </tr>
+
+          <tr id="result-instacartMinimum">
+            <td>Instacart Minimum</td>
+            <td id="result-instacartMinimum-rate" class="money"></td>
+            <td id="result-instacartMinimum-quantity" class="number">1</td>
+            <td id="result-instacartMinimum-net" class="money good"></td>
+          </tr>
+
+          <tr id="result-instacartMaximum">
+            <td>Instacart Maximum</td>
+            <td id="result-instacartMaximum-rate" class="money"></td>
+            <td id="result-instacartMaximum-quantity" class="number">1</td>
+            <td id="result-instacartMaximum-net" class="money good"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table id="totalNet">
+        <tbody>
+          <tr>
+            <th class="hidden">Total Gross (low)</th>
+            <td id="result-totalGross-low" class="money number hidden">
+              <!-- total gross (low) -->
+            </td>
+
+            <th class="hidden">Total Gross (high)</th>
+            <td id="result-totalGross-high" class="money number hidden">
+              <!-- total gross (high) -->
+            </td>
+
+            <th class="hidden">Total Expenses</th>
+            <td id="result-totalExpenses" class="money number hidden">
+              <!-- total expenses -->
+            </td>
+          </tr>
+          
+          <tr>
+            <th style="background-color: rgb(209, 125, 125)">Net (low)</th>
+            <td id="result-totalNet-low" class="money" style="background-color: rgba(209, 125, 125, 0.2)">
+              <!-- net low-->
+            </td>
+          </tr>
+          
+          <tr>
+            <th style="background-color: rgb(125, 209, 132)">Net (high)</th>
+            <td id="result-totalNet-high" class="money" style="background-color: rgba(125, 209, 132, 0.2)"">
+              <!-- net high-->
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+    <!-- BEGIN: Globals -->
+    <script>
+      const gebid = (str) => document.getElementById(str);
+      const [
+        distanceFromStore,
+        tip,
+        numberOfItems,
+        instacartMinimum,
+        instacartMaximum,
+        gasPrice,
+        averageMileage,
+        costPerMile,
+      ] = [
+        // Job
+        gebid("distanceFromStore"),
+        gebid("tip"),
+        gebid("numberOfItems"),
+
+        // Instacart
+        gebid("instacartMinimum"),
+        gebid("instacartMaximum"),
+
+        // Car
+        gebid("gasPrice"),
+        gebid("averageMileage"),
+        gebid("costPerMile"),
+      ];
+      const formFields = [
+        distanceFromStore,
+        tip,
+        numberOfItems,
+
+        // Instacart
+        instacartMinimum,
+        instacartMaximum,
+
+        // Car
+        gasPrice,
+        averageMileage,
+      ];
+      const resultsObj = {
+        grossPerItemPicked: {
+          rate: gebid("results-grossPerItem-rate"),
+          quantity: gebid("results-grossPerItem-quantity"),
+          net: gebid("results-grossPerItem-net"),
+        },
+        costPerMile: {
+          rate: gebid("results-costPerMile-rate"),
+          quantity: gebid("results-costPerMile-quantity"),
+          net: gebid("results-costPerMile-net"),
+        },
+      };
+
+      class CalculatedField {
+        name = "";
+        element = null;
+        calcFunc = () => {};
+
+        constructor(name, calcFunc) {
+          this.name = name;
+          this.element = gebid(this.name);
+          this.calcFunc = calcFunc;
+        }
+
+        calculate = () => (this.element.textContent = this.calcFunc());
+      }
+
+      const moveCursorToEnd = (obj) => {
+        const isNumber = obj.type.toLowerCase() === "number";
+        if (isNumber) obj.type = "text";
+
+        obj.setSelectionRange(
+          obj.textContent.length + 1,
+          obj.textContent.length + 1
+        );
+
+        if (isNumber) obj.type = "number";
+      };
+    </script>
+    <!-- END: Globals -->
+
+    <!-- BEGIN: User Settings -->
+    <script>
+      class UserSettings {
+        keyName = "instaCalcSettings";
+
+        getCurrentSettings = () => ({
+          job: {
+            distanceFromStore: Number(distanceFromStore.value).toFixed(0),
+            tip: Number(tip.value).toFixed(2),
+            numberOfItems: Number(numberOfItems.value).toFixed(0),
+          },
+
+          instacart: {
+            baseRate: {
+              low: Number(instacartMinimum.value).toFixed(2),
+              high: Number(instacartMaximum.value).toFixed(2),
+            },
+          },
+
+          car: {
+            gasPrice: Number(gasPrice.value).toFixed(2),
+            averageMileage: Number(averageMileage.value).toFixed(0),
+          },
+        });
+
+        getFromStorage = () => JSON.parse(localStorage.getItem(this.keyName));
+        restore = () => {
+          const settings = this.getFromStorage();
+          if (!settings)
+            return console.warn("No saved settings found; aborting restore");
+
+          const restoreObj = (obj, val) => {
+            obj.value = val;
+            console.log(`[Settings Restore] "${obj.id}" -> "${val}"`);
+          };
+
+          // Job
+          restoreObj(distanceFromStore, settings.job.distanceFromStore);
+          restoreObj(tip, settings.job.tip);
+          restoreObj(numberOfItems, settings.job.numberOfItems);
+
+          // Instacart
+          restoreObj(instacartMinimum, settings.instacart.baseRate.low);
+          restoreObj(instacartMaximum, settings.instacart.baseRate.high);
+
+          // Car
+          restoreObj(gasPrice, settings.car.gasPrice);
+          restoreObj(averageMileage, settings.car.averageMileage);
+
+          console.log("[Settings] Restored from browser");
+        };
+        save = () => {
+          const currentSettings = this.getCurrentSettings();
+          console.log(currentSettings);
+
+          localStorage.setItem(this.keyName, JSON.stringify(currentSettings));
+
+          console.log("[Settings] Saved to browser");
+        };
+      }
+
+      const settings = new UserSettings();
+    </script>
+    <!-- END: User Settings -->
+
+    <!-- BEGIN: Logic -->
+    <script>
+      const getGasExpense = () =>
+        (gasPrice.value / averageMileage.value) * distanceFromStore.value;
+      const getNumberOfItems = () => Number(numberOfItems.value);
+      const getGrossPerItem = () => tip.value / getNumberOfItems();
+      const getCostPerMile = () => gasPrice.value / averageMileage.value;
+
+      const getAllExpenses = () =>
+        getCostPerMile() * Number(distanceFromStore.value);
+
+      const createNetCalc = (name) => {
+        const baseName = `result-${name}`;
+
+        return new CalculatedField(`${baseName}-net`, () =>
+          Number(
+            Number(gebid(`${baseName}-rate`).textContent) *
+              Number(gebid(`${baseName}-quantity`).textContent)
+          ).toFixed(2)
+        );
+      };
+
+      const calculatedFields = {
+        lineItems: [
+          // Gross Per Item
+          new CalculatedField("result-grossPerItem-rate", () =>
+            getGrossPerItem().toFixed(2)
+          ),
+          new CalculatedField("result-grossPerItem-quantity", getNumberOfItems),
+          createNetCalc("grossPerItem"),
+
+          // Cost Per Mile
+          new CalculatedField("result-costPerMile-rate", () =>
+            getCostPerMile().toFixed(2)
+          ),
+          new CalculatedField("result-costPerMile-quantity", () =>
+            Number(distanceFromStore.value).toFixed(0)
+          ),
+          createNetCalc("costPerMile"),
+
+          // Instacart Minimum
+          new CalculatedField("result-instacartMinimum-rate", () => Number(instacartMinimum.value).toFixed(2)),
+          createNetCalc("instacartMinimum"),
+
+          // Instacart Maximum
+          new CalculatedField("result-instacartMaximum-rate", () => Number(instacartMaximum.value).toFixed(2)),
+          createNetCalc("instacartMaximum"),
+        ],
+
+        totals: [
+          // Total Expenses
+          new CalculatedField("result-totalExpenses", () =>
+            Number(gebid("result-costPerMile-net").textContent)
+          ),
+
+          // Total Net
+          new CalculatedField("result-totalNet-low", () =>
+            Number(
+              Number(instacartMinimum.value) +
+                Number(tip.value) -
+                getAllExpenses()
+            ).toFixed(2)
+          ),
+
+          new CalculatedField("result-totalNet-high", () =>
+            Number(
+              Number(instacartMaximum.value) +
+                Number(tip.value) -
+                getAllExpenses()
+            ).toFixed(2)
+          ),
+        ],
+      };
+
+      const doCalculation = () => {
+        [calculatedFields.lineItems, calculatedFields.totals].map((fieldList) =>
+          fieldList.map((field) => field.calculate())
+        );
+      };
+
+      ["change"].map((eventName) =>
+        formFields.map((field) =>
+          field.addEventListener(eventName, () => {
+            doCalculation();
+            settings.save();
+          })
+        )
+      );
+
+      const initialLoad = () => {
+        settings.restore();
+        doCalculation();
+
+        distanceFromStore.focus();
+        moveCursorToEnd(distanceFromStore);
+      };
+
+      initialLoad();
+    </script>
+    <!-- END: Logic -->
+  </body>
+</html>
